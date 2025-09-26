@@ -419,6 +419,22 @@
             color: var(--primary);
             margin: 20px 0;
         }
+
+        /* Ad Counter */
+        .ad-counter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #334155;
+            border-radius: 6px;
+        }
+
+        .ad-count {
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -430,6 +446,10 @@
             <div class="countdown" id="verificationCountdown">10</div>
             <div class="progress-bar">
                 <div class="progress" id="verificationProgress" style="width: 0%"></div>
+            </div>
+            <div class="ad-counter">
+                <span>Ads watched in this session:</span>
+                <span class="ad-count" id="sessionAdCount">0/10</span>
             </div>
             <p style="margin-top: 15px; color: var(--text-secondary);">Do not close this window until the ad is finished</p>
         </div>
@@ -471,6 +491,10 @@
                 <div class="input-group">
                     <label class="input-label">Phone Number</label>
                     <input type="tel" id="signupPhone" class="input-field" placeholder="01XXXXXXXXX">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Referral ID (Optional)</label>
+                    <input type="text" id="referralId" class="input-field" placeholder="Enter referral ID if any">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Password</label>
@@ -658,7 +682,7 @@
             <h2 style="margin-bottom: 20px;">Investment Packages</h2>
             <p style="margin-bottom: 20px; color: var(--text-secondary);">
                 Purchase packages using your deposit balance. To earn daily income from a package, 
-                you must watch at least 3 ads per day.
+                you must watch at least 3 ads per day for each active package.
             </p>
             
             <div class="packages-grid" id="packagesContainer">
@@ -717,7 +741,7 @@
 
     <script>
         // Firebase Configuration
-        const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyDtrDl1Eq2bO7ImrZTtRWtzNSIowZ3jghE",
   authDomain: "safe-trust-investment-ead55.firebaseapp.com",
   databaseURL: "https://safe-trust-investment-ead55-default-rtdb.firebaseio.com",
@@ -738,6 +762,8 @@
         let adsWatchedToday = 0;
         let adVerificationTimer = null;
         let currentAdId = null;
+        let sessionAdCount = 0;
+        let referralIdFromURL = null;
 
         // DOM Elements
         const authContainer = document.getElementById('authContainer');
@@ -746,11 +772,22 @@
         const verificationOverlay = document.getElementById('verificationOverlay');
         const verificationCountdown = document.getElementById('verificationCountdown');
         const verificationProgress = document.getElementById('verificationProgress');
+        const sessionAdCountElement = document.getElementById('sessionAdCount');
+
+        // Check for referral ID in URL
+        function checkReferralFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            referralIdFromURL = urlParams.get('ref');
+            if (referralIdFromURL) {
+                document.getElementById('referralId').value = referralIdFromURL;
+            }
+        }
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             checkAuthState();
+            checkReferralFromURL();
             
             // Initialize Ad SDK if available
             initializeAdSDK();
@@ -849,6 +886,7 @@
             const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const phone = document.getElementById('signupPhone').value;
+            const referralId = document.getElementById('referralId').value;
             const password = document.getElementById('signupPassword').value;
             
             if (!name || !email || !phone || !password) {
@@ -873,14 +911,48 @@
                         referralIncome: 0,
                         referralCount: 0,
                         activePackages: [],
+                        referredBy: referralId || null,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                })
+                .then(() => {
+                    // If user was referred, update the referrer's data
+                    if (referralId) {
+                        return updateReferrerData(referralId);
+                    }
                 })
                 .then(() => {
                     showToast('Account created successfully!', 'success');
                 })
                 .catch(error => {
                     showToast('Signup failed: ' + error.message, 'error');
+                });
+        }
+
+        // Update referrer's data when a new user signs up with their referral
+        function updateReferrerData(referralId) {
+            // Find the user with this referral ID
+            return db.collection('users')
+                .where('userId', '==', referralId)
+                .get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        const referrerDoc = snapshot.docs[0];
+                        const referrerData = referrerDoc.data();
+                        
+                        // Update referrer's referral count and income
+                        return db.collection('users').doc(referrerDoc.id).update({
+                            referralCount: firebase.firestore.FieldValue.increment(1),
+                            referralIncome: firebase.firestore.FieldValue.increment(30),
+                            balance: firebase.firestore.FieldValue.increment(30)
+                        });
+                    }
+                })
+                .then(() => {
+                    console.log('Referrer data updated successfully');
+                })
+                .catch(error => {
+                    console.error('Error updating referrer data:', error);
                 });
         }
 
@@ -948,7 +1020,7 @@
             // Update referral info
             document.getElementById('referralCount').textContent = userData.referralCount || 0;
             document.getElementById('totalReferralEarnings').textContent = userData.referralIncome + ' ৳';
-            document.getElementById('referralLink').value = window.location.origin + '?ref=' + userData.userId;
+            document.getElementById('referralLink').value = window.location.origin + window.location.pathname + '?ref=' + userData.userId;
             
             // Update profile form
             document.getElementById('profileName').value = userData.name;
@@ -1023,32 +1095,23 @@
             const adsContainer = document.getElementById('adsContainer');
             adsContainer.innerHTML = '';
             
-            // Sample ads data
-            const ads = [
-                { id: 1, title: 'Tech Product Review', duration: 30 },
-                { id: 2, title: 'Fashion Brand Ad', duration: 25 },
-                { id: 3, title: 'Food Delivery Service', duration: 20 },
-                { id: 4, title: 'Travel Agency Promotion', duration: 35 }
-            ];
+            // Single ad that allows watching 10 ads in one session
+            const adCard = document.createElement('div');
+            adCard.className = 'card ad-card';
+            adCard.innerHTML = `
+                <h3>Premium Ad Session</h3>
+                <p>Watch ads in this session to earn 5৳ per ad. You can watch up to 10 ads in this session.</p>
+                <div class="ad-container" id="ad-container-1">
+                    <div class="ad-placeholder">Ad will load here</div>
+                </div>
+                <div class="ad-timer">30s</div>
+                <div class="progress-bar">
+                    <div class="progress" id="progress-1"></div>
+                </div>
+                <button class="btn watch-ad-btn" data-id="1" data-duration="30">Start Ad Session</button>
+            `;
             
-            ads.forEach(ad => {
-                const adCard = document.createElement('div');
-                adCard.className = 'card ad-card';
-                adCard.innerHTML = `
-                    <h3>${ad.title}</h3>
-                    <p>Watch this ad to earn 5৳</p>
-                    <div class="ad-container" id="ad-container-${ad.id}">
-                        <div class="ad-placeholder">Ad will load here</div>
-                    </div>
-                    <div class="ad-timer">${ad.duration}s</div>
-                    <div class="progress-bar">
-                        <div class="progress" id="progress-${ad.id}"></div>
-                    </div>
-                    <button class="btn watch-ad-btn" data-id="${ad.id}" data-duration="${ad.duration}">Watch Ad</button>
-                `;
-                
-                adsContainer.appendChild(adCard);
-            });
+            adsContainer.appendChild(adCard);
             
             // Add event listeners to watch buttons
             document.querySelectorAll('.watch-ad-btn').forEach(btn => {
@@ -1066,16 +1129,20 @@
                 return;
             }
             
-            // Check if user has already watched this ad today
+            if (sessionAdCount >= 10) {
+                showToast('Session ad limit reached! Start a new session tomorrow.', 'error');
+                return;
+            }
+            
+            // Check if user has already watched maximum ads today
             const today = new Date().toDateString();
             db.collection('adViews')
                 .where('userId', '==', currentUser.uid)
                 .where('date', '==', today)
-                .where('adId', '==', adId)
                 .get()
                 .then(snapshot => {
-                    if (!snapshot.empty) {
-                        showToast('You have already watched this ad today!', 'error');
+                    if (snapshot.size >= 20) {
+                        showToast('Daily ad limit reached!', 'error');
                         return;
                     }
                     
@@ -1095,6 +1162,7 @@
             verificationOverlay.style.display = 'flex';
             verificationCountdown.textContent = duration;
             verificationProgress.style.width = '0%';
+            sessionAdCountElement.textContent = sessionAdCount + '/10';
             
             let timeLeft = duration;
             let progress = 0;
@@ -1193,8 +1261,9 @@
                 });
             })
             .then(() => {
-                // Update local ad count
+                // Update local ad counts
                 adsWatchedToday++;
+                sessionAdCount++;
                 
                 // Show success message
                 showToast('+5৳ earned from watching ad!', 'success');
@@ -1202,10 +1271,22 @@
                 // Update UI
                 updateUI();
                 
-                // Reset button
-                button.disabled = false;
-                button.textContent = 'Watch Again Tomorrow';
-                button.disabled = true;
+                // Update session counter
+                sessionAdCountElement.textContent = sessionAdCount + '/10';
+                
+                // Check if user can watch more ads in this session
+                if (sessionAdCount < 10 && adsWatchedToday < 20) {
+                    // Enable button to watch next ad
+                    button.disabled = false;
+                    button.textContent = 'Watch Next Ad (' + (10 - sessionAdCount) + ' left)';
+                    
+                    // Check package ad requirements
+                    checkPackageAdRequirements();
+                } else {
+                    // Disable button if limit reached
+                    button.disabled = true;
+                    button.textContent = 'Session Complete';
+                }
             })
             .catch(error => {
                 console.error('Error completing ad watch:', error);
@@ -1214,6 +1295,74 @@
                 // Reset button
                 button.disabled = false;
                 button.textContent = 'Watch Ad';
+            });
+        }
+
+        // Check if user has watched enough ads for their packages
+        function checkPackageAdRequirements() {
+            if (!userData || !userData.activePackages || userData.activePackages.length === 0) {
+                return;
+            }
+            
+            const today = new Date().toDateString();
+            const requiredAds = userData.activePackages.length * 3;
+            
+            // Count ads watched today for packages
+            db.collection('adViews')
+                .where('userId', '==', currentUser.uid)
+                .where('date', '==', today)
+                .where('forPackage', '==', true)
+                .get()
+                .then(snapshot => {
+                    const packageAdsWatched = snapshot.size;
+                    
+                    // If user has watched enough ads for their packages, add daily earnings
+                    if (packageAdsWatched >= requiredAds) {
+                        addPackageDailyEarnings();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking package ad requirements:', error);
+                });
+        }
+
+        // Add daily earnings from packages
+        function addPackageDailyEarnings() {
+            if (!userData || !userData.activePackages) return;
+            
+            let totalDailyEarnings = 0;
+            
+            // Calculate total daily earnings from all packages
+            userData.activePackages.forEach(pkg => {
+                // Package earnings based on package ID
+                const packageEarnings = {
+                    1: 50, 2: 120, 3: 350, 4: 800, 5: 1300,
+                    6: 1800, 7: 2400, 8: 3000, 9: 3600, 10: 4000
+                };
+                
+                totalDailyEarnings += packageEarnings[pkg.id] || 0;
+            });
+            
+            // Add earnings to user balance
+            db.collection('users').doc(currentUser.uid).update({
+                balance: firebase.firestore.FieldValue.increment(totalDailyEarnings)
+            })
+            .then(() => {
+                // Create transaction record
+                return db.collection('transactions').add({
+                    userId: currentUser.uid,
+                    type: 'package_earnings',
+                    amount: totalDailyEarnings,
+                    description: 'Daily earnings from packages',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .then(() => {
+                showToast('+' + totalDailyEarnings + '৳ added from package earnings!', 'success');
+                updateUI();
+            })
+            .catch(error => {
+                console.error('Error adding package earnings:', error);
             });
         }
 
@@ -1258,6 +1407,9 @@
                             <span>${pkg.total}৳</span>
                         </div>
                     </div>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin: 10px 0;">
+                        Requires watching 3 ads daily to earn income
+                    </p>
                     <button class="btn purchase-package-btn" data-id="${pkg.id}" data-price="${pkg.price}">Purchase</button>
                 `;
                 
@@ -1373,7 +1525,7 @@
             }
             
             if (userData.referralCount < 10) {
-                showToast('You need at least 10 referrals to withdraw', 'error');
+                showToast('You need at least 10 successful referrals to withdraw', 'error');
                 return;
             }
             
