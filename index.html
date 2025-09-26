@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Investment - Investment Platform</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Ad Network SDK -->
+    <script src='//libtl.com/sdk.js' data-zone='9898916' data-sdk='show_9898916'></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #059669;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+            --text-secondary: #cbd5e1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--dark);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #047857;
+        }
+
+        /* Input Styles */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+        }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #334155;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Dashboard Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+
+        /* Package Cards */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .package-card {
+            padding: 20px;
+        }
+
+        .package-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .package-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .package-details {
+            margin: 15px 0;
+        }
+
+        .package-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #334155;
+        }
+
+        /* Ads Cards */
+        .ads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .ad-card {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .ad-timer {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        /* Ad Container */
+        .ad-container {
+            width: 100%;
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #334155;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .ad-placeholder {
+            color: var(--text-secondary);
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            background: var(--dark);
+            border: 1px solid #334155;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .packages-grid, .ads-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* User Info */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-id {
+            background: #334155;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Ad Verification Overlay */
+        .verification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            display: none;
+        }
+
+        .verification-box {
+            background: var(--dark);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid #334155;
+        }
+
+        .verification-text {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        .countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Ad Verification Overlay -->
+    <div class="verification-overlay" id="verificationOverlay">
+        <div class="verification-box card">
+            <h2>Ad Verification</h2>
+            <div class="verification-text">Please watch the ad completely to earn 5৳</div>
+            <div class="countdown" id="verificationCountdown">10</div>
+            <div class="progress-bar">
+                <div class="progress" id="verificationProgress" style="width: 0%"></div>
+            </div>
+            <p style="margin-top: 15px; color: var(--text-secondary);">Do not close this window until the ad is finished</p>
+        </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div class="auth-container" id="authContainer">
+        <div class="card auth-box">
+            <h2 style="text-align: center; margin-bottom: 30px; color: var(--primary);">Trust Investment</h2>
+            
+            <div id="authTabs" style="display: flex; margin-bottom: 20px;">
+                <div class="tab active" data-tab="login">Login</div>
+                <div class="tab" data-tab="signup">Sign Up</div>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <div class="input-group">
+                    <label class="input-label">Email</label>
+                    <input type="email" id="loginEmail" class="input-field" placeholder="your@email.com">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <input type="password" id="loginPassword" class="input-field" placeholder="••••••••">
+                </div>
+                <button class="btn" id="loginBtn" style="width: 100%;">Login</button>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signupForm" class="auth-form" style="display: none;">
+                <div class="input-group">
+                    <label class="input-label">Full Name</label>
+                    <input type="text" id="signupName" class="input-field" placeholder="John Doe">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Email</label>
+                    <input type="email" id="signupEmail" class="input-field" placeholder="your@email.com">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Phone Number</label>
+                    <input type="tel" id="signupPhone" class="input-field" placeholder="01XXXXXXXXX">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <input type="password" id="signupPassword" class="input-field" placeholder="••••••••">
+                </div>
+                <button class="btn" id="signupBtn" style="width: 100%;">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="dashboard container" id="dashboard">
+        <div class="header">
+            <div class="logo">Trust Investment</div>
+            <div class="user-info">
+                <span id="userName">User Name</span>
+                <div class="user-id">
+                    <span id="userId">ID: Loading...</span>
+                    <button class="copy-btn" id="copyIdBtn">📋</button>
+                </div>
+                <button class="btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="dashboard">Dashboard</div>
+            <div class="tab" data-tab="ads">Watch Ads</div>
+            <div class="tab" data-tab="referral">Referral</div>
+            <div class="tab" data-tab="deposit">Deposit</div>
+            <div class="tab" data-tab="withdraw">Withdraw</div>
+            <div class="tab" data-tab="packages">Packages</div>
+            <div class="tab" data-tab="notifications">Notifications</div>
+            <div class="tab" data-tab="profile">Profile</div>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="tab-content active" id="dashboardTab">
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <h3>Current Balance</h3>
+                    <div class="stat-value" id="currentBalance">0 ৳</div>
+                    <p>Available for withdrawal</p>
+                </div>
+                <div class="card stat-card">
+                    <h3>Referral Income</h3>
+                    <div class="stat-value" id="referralIncome">0 ৳</div>
+                    <p>Total from referrals</p>
+                </div>
+                <div class="card stat-card">
+                    <h3>Package Status</h3>
+                    <div class="stat-value" id="activePackages">0</div>
+                    <p>Active investments</p>
+                </div>
+                <div class="card stat-card">
+                    <h3>Today's Earnings</h3>
+                    <div class="stat-value" id="todayEarnings">0 ৳</div>
+                    <p>From ads and packages</p>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 20px;">Recent Activities</h3>
+            <div class="card" style="padding: 20px;">
+                <div id="recentActivities">
+                    <p style="text-align: center; color: var(--text-secondary);">No recent activities</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="adsTab">
+            <h2 style="margin-bottom: 20px;">Watch Ads & Earn Money</h2>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Watch ads to earn 5৳ per ad. Daily limit: 20 ads.</p>
+            
+            <div class="ads-grid" id="adsContainer">
+                <!-- Ads will be dynamically loaded here -->
+            </div>
+            
+            <div class="card" style="padding: 20px; margin-top: 20px; text-align: center;">
+                <h3>Today's Progress</h3>
+                <p>Ads watched today: <span id="adsWatchedToday">0</span>/20</p>
+                <div class="progress-bar">
+                    <div class="progress" id="adsProgressBar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="referralTab">
+            <h2 style="margin-bottom: 20px;">Referral Program</h2>
+            
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <h3>Successful Referrals</h3>
+                    <div class="stat-value" id="referralCount">0</div>
+                    <p>People who joined using your link</p>
+                </div>
+                <div class="card stat-card">
+                    <h3>Referral Earnings</h3>
+                    <div class="stat-value" id="totalReferralEarnings">0 ৳</div>
+                    <p>30৳ per successful referral</p>
+                </div>
+            </div>
+            
+            <div class="card" style="padding: 20px; margin-top: 20px;">
+                <h3 style="margin-bottom: 15px;">Your Referral Link</h3>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="referralLink" class="input-field" readonly style="flex: 1;">
+                    <button class="btn" id="copyReferralBtn">Copy Link</button>
+                </div>
+                <p style="margin-top: 15px; color: var(--text-secondary); font-size: 14px;">
+                    Share this link with friends. You'll earn 30৳ for each successful referral.
+                    Withdrawal is only allowed after 10 successful referrals.
+                </p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="depositTab">
+            <h2 style="margin-bottom: 20px;">Deposit Funds</h2>
+            
+            <div class="card" style="padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Deposit Instructions</h3>
+                <p style="margin-bottom: 10px;">Send money to: <strong>01746629972 (bKash / Nagad)</strong></p>
+                <p style="margin-bottom: 15px;">After sending, provide the transaction details below.</p>
+                <p style="color: var(--text-secondary); font-size: 14px;">
+                    Note: Deposits will be pending until verified by admin. Balance will update after verification.
+                </p>
+            </div>
+            
+            <div class="card" style="padding: 20px;">
+                <h3 style="margin-bottom: 15px;">Deposit Form</h3>
+                <div class="input-group">
+                    <label class="input-label">Transaction ID</label>
+                    <input type="text" id="depositTransactionId" class="input-field" placeholder="Enter transaction ID">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Amount (৳)</label>
+                    <input type="number" id="depositAmount" class="input-field" placeholder="Enter amount">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Payment Method</label>
+                    <select id="depositMethod" class="input-field">
+                        <option value="bkash">bKash</option>
+                        <option value="nagad">Nagad</option>
+                    </select>
+                </div>
+                <button class="btn" id="submitDepositBtn" style="width: 100%;">Submit Deposit Request</button>
+            </div>
+        </div>
+
+        <div class="tab-content" id="withdrawTab">
+            <h2 style="margin-bottom: 20px;">Withdraw Funds</h2>
+            
+            <div class="card" style="padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Withdrawal Rules</h3>
+                <p style="margin-bottom: 10px;">Minimum withdrawal: <strong>1000৳</strong></p>
+                <p style="margin-bottom: 10px;">Maximum withdrawal: <strong>50000৳</strong></p>
+                <p style="margin-bottom: 10px;">Withdrawal method: <strong>bKash / Nagad</strong></p>
+                <p style="color: var(--text-secondary); font-size: 14px;">
+                    Note: You need at least 10 successful referrals to withdraw. 
+                    Amount will be deducted immediately upon request and processed by admin.
+                </p>
+            </div>
+            
+            <div class="card" style="padding: 20px;">
+                <h3 style="margin-bottom: 15px;">Withdrawal Form</h3>
+                <div class="input-group">
+                    <label class="input-label">Amount (৳)</label>
+                    <input type="number" id="withdrawAmount" class="input-field" placeholder="Enter amount (1000-50000)">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Payment Method</label>
+                    <select id="withdrawMethod" class="input-field">
+                        <option value="bkash">bKash</option>
+                        <option value="nagad">Nagad</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Account Number</label>
+                    <input type="text" id="withdrawAccount" class="input-field" placeholder="Enter your bKash/Nagad number">
+                </div>
+                <button class="btn" id="submitWithdrawBtn" style="width: 100%;">Submit Withdrawal Request</button>
+            </div>
+        </div>
+
+        <div class="tab-content" id="packagesTab">
+            <h2 style="margin-bottom: 20px;">Investment Packages</h2>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                Purchase packages using your deposit balance. To earn daily income from a package, 
+                you must watch at least 3 ads per day.
+            </p>
+            
+            <div class="packages-grid" id="packagesContainer">
+                <!-- Packages will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="notificationsTab">
+            <h2 style="margin-bottom: 20px;">Notifications</h2>
+            <div id="notificationsList">
+                <!-- Notifications will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="profileTab">
+            <h2 style="margin-bottom: 20px;">Profile Settings</h2>
+            
+            <div class="card" style="padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Account Information</h3>
+                <div class="input-group">
+                    <label class="input-label">Full Name</label>
+                    <input type="text" id="profileName" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Email</label>
+                    <input type="email" id="profileEmail" class="input-field" readonly>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Phone Number</label>
+                    <input type="tel" id="profilePhone" class="input-field">
+                </div>
+                <button class="btn" id="updateProfileBtn">Update Profile</button>
+            </div>
+            
+            <div class="card" style="padding: 20px;">
+                <h3 style="margin-bottom: 15px;">Change Password</h3>
+                <div class="input-group">
+                    <label class="input-label">Current Password</label>
+                    <input type="password" id="currentPassword" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">New Password</label>
+                    <input type="password" id="newPassword" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="input-field">
+                </div>
+                <button class="btn" id="changePasswordBtn">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyDtrDl1Eq2bO7ImrZTtRWtzNSIowZ3jghE",
+  authDomain: "safe-trust-investment-ead55.firebaseapp.com",
+  databaseURL: "https://safe-trust-investment-ead55-default-rtdb.firebaseio.com",
+  projectId: "safe-trust-investment-ead55",
+  storageBucket: "safe-trust-investment-ead55.firebasestorage.app",
+  messagingSenderId: "695800646092",
+  appId: "1:695800646092:web:c4fd66189213e9b4403569"
+}; 
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Global Variables
+        let currentUser = null;
+        let userData = null;
+        let adsWatchedToday = 0;
+        let adVerificationTimer = null;
+        let currentAdId = null;
+
+        // DOM Elements
+        const authContainer = document.getElementById('authContainer');
+        const dashboard = document.getElementById('dashboard');
+        const toastContainer = document.getElementById('toastContainer');
+        const verificationOverlay = document.getElementById('verificationOverlay');
+        const verificationCountdown = document.getElementById('verificationCountdown');
+        const verificationProgress = document.getElementById('verificationProgress');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            checkAuthState();
+            
+            // Initialize Ad SDK if available
+            initializeAdSDK();
+        });
+
+        // Initialize Ad SDK
+        function initializeAdSDK() {
+            // Check if ad SDK is loaded
+            if (typeof show_9898916 !== 'undefined') {
+                console.log('Ad SDK loaded successfully');
+            } else {
+                console.log('Ad SDK not available, using fallback ads');
+            }
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Auth tabs
+            document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Handle auth tabs
+                    if (tabName === 'login' || tabName === 'signup') {
+                        document.querySelectorAll('#authTabs .tab').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        document.getElementById('loginForm').style.display = tabName === 'login' ? 'block' : 'none';
+                        document.getElementById('signupForm').style.display = tabName === 'signup' ? 'block' : 'none';
+                    } 
+                    // Handle dashboard tabs
+                    else {
+                        document.querySelectorAll('.nav-tabs .tab').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        document.getElementById(tabName + 'Tab').classList.add('active');
+                        
+                        // Load specific tab data
+                        if (tabName === 'ads') loadAds();
+                        if (tabName === 'packages') loadPackages();
+                        if (tabName === 'notifications') loadNotifications();
+                    }
+                });
+            });
+
+            // Auth buttons
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('signupBtn').addEventListener('click', signup);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Dashboard buttons
+            document.getElementById('copyIdBtn').addEventListener('click', copyUserId);
+            document.getElementById('copyReferralBtn').addEventListener('click', copyReferralLink);
+            document.getElementById('submitDepositBtn').addEventListener('click', submitDeposit);
+            document.getElementById('submitWithdrawBtn').addEventListener('click', submitWithdrawal);
+            document.getElementById('updateProfileBtn').addEventListener('click', updateProfile);
+            document.getElementById('changePasswordBtn').addEventListener('click', changePassword);
+        }
+
+        // Auth State Check
+        function checkAuthState() {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    loadUserData();
+                    showDashboard();
+                } else {
+                    showAuth();
+                }
+            });
+        }
+
+        // Authentication Functions
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showToast('Please enter email and password', 'error');
+                return;
+            }
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    showToast('Login successful!', 'success');
+                })
+                .catch(error => {
+                    showToast('Login failed: ' + error.message, 'error');
+                });
+        }
+
+        function signup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            if (!name || !email || !phone || !password) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    // Create user document in Firestore
+                    return db.collection('users').doc(userCredential.user.uid).set({
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        userId: generateUserId(),
+                        balance: 0,
+                        referralIncome: 0,
+                        referralCount: 0,
+                        activePackages: [],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                })
+                .then(() => {
+                    showToast('Account created successfully!', 'success');
+                })
+                .catch(error => {
+                    showToast('Signup failed: ' + error.message, 'error');
+                });
+        }
+
+        function logout() {
+            auth.signOut()
+                .then(() => {
+                    showToast('Logged out successfully', 'success');
+                })
+                .catch(error => {
+                    showToast('Logout failed: ' + error.message, 'error');
+                });
+        }
+
+        // Generate unique user ID
+        function generateUserId() {
+            return 'TRUST' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+
+        // Load User Data
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+                if (doc.exists) {
+                    userData = doc.data();
+                    updateUI();
+                }
+            });
+            
+            // Load today's ad count
+            loadTodaysAdCount();
+        }
+
+        // Load today's ad watch count
+        function loadTodaysAdCount() {
+            if (!currentUser) return;
+            
+            const today = new Date().toDateString();
+            db.collection('adViews')
+                .where('userId', '==', currentUser.uid)
+                .where('date', '==', today)
+                .get()
+                .then(snapshot => {
+                    adsWatchedToday = snapshot.size;
+                    updateUI();
+                })
+                .catch(error => {
+                    console.error('Error loading ad count:', error);
+                });
+        }
+
+        // Update UI with user data
+        function updateUI() {
+            if (!userData) return;
+            
+            // Update user info
+            document.getElementById('userName').textContent = userData.name;
+            document.getElementById('userId').textContent = 'ID: ' + userData.userId;
+            
+            // Update stats
+            document.getElementById('currentBalance').textContent = userData.balance + ' ৳';
+            document.getElementById('referralIncome').textContent = userData.referralIncome + ' ৳';
+            document.getElementById('activePackages').textContent = userData.activePackages ? userData.activePackages.length : 0;
+            
+            // Update referral info
+            document.getElementById('referralCount').textContent = userData.referralCount || 0;
+            document.getElementById('totalReferralEarnings').textContent = userData.referralIncome + ' ৳';
+            document.getElementById('referralLink').value = window.location.origin + '?ref=' + userData.userId;
+            
+            // Update profile form
+            document.getElementById('profileName').value = userData.name;
+            document.getElementById('profileEmail').value = userData.email;
+            document.getElementById('profilePhone').value = userData.phone;
+            
+            // Calculate today's earnings (simplified)
+            const todayEarnings = (adsWatchedToday * 5) + (userData.activePackages ? userData.activePackages.length * 50 : 0);
+            document.getElementById('todayEarnings').textContent = todayEarnings + ' ৳';
+            
+            // Update ads progress
+            document.getElementById('adsWatchedToday').textContent = adsWatchedToday;
+            document.getElementById('adsProgressBar').style.width = (adsWatchedToday / 20) * 100 + '%';
+        }
+
+        // Show/Hide Sections
+        function showAuth() {
+            authContainer.style.display = 'flex';
+            dashboard.style.display = 'none';
+        }
+
+        function showDashboard() {
+            authContainer.style.display = 'none';
+            dashboard.style.display = 'block';
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 300);
+            }, 5000);
+        }
+
+        // Copy Functions
+        function copyUserId() {
+            navigator.clipboard.writeText(userData.userId)
+                .then(() => {
+                    showToast('User ID copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    showToast('Failed to copy User ID', 'error');
+                });
+        }
+
+        function copyReferralLink() {
+            const referralLink = document.getElementById('referralLink');
+            referralLink.select();
+            navigator.clipboard.writeText(referralLink.value)
+                .then(() => {
+                    showToast('Referral link copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    showToast('Failed to copy referral link', 'error');
+                });
+        }
+
+        // Ads Functions
+        function loadAds() {
+            const adsContainer = document.getElementById('adsContainer');
+            adsContainer.innerHTML = '';
+            
+            // Sample ads data
+            const ads = [
+                { id: 1, title: 'Tech Product Review', duration: 30 },
+                { id: 2, title: 'Fashion Brand Ad', duration: 25 },
+                { id: 3, title: 'Food Delivery Service', duration: 20 },
+                { id: 4, title: 'Travel Agency Promotion', duration: 35 }
+            ];
+            
+            ads.forEach(ad => {
+                const adCard = document.createElement('div');
+                adCard.className = 'card ad-card';
+                adCard.innerHTML = `
+                    <h3>${ad.title}</h3>
+                    <p>Watch this ad to earn 5৳</p>
+                    <div class="ad-container" id="ad-container-${ad.id}">
+                        <div class="ad-placeholder">Ad will load here</div>
+                    </div>
+                    <div class="ad-timer">${ad.duration}s</div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progress-${ad.id}"></div>
+                    </div>
+                    <button class="btn watch-ad-btn" data-id="${ad.id}" data-duration="${ad.duration}">Watch Ad</button>
+                `;
+                
+                adsContainer.appendChild(adCard);
+            });
+            
+            // Add event listeners to watch buttons
+            document.querySelectorAll('.watch-ad-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const adId = this.getAttribute('data-id');
+                    const duration = parseInt(this.getAttribute('data-duration'));
+                    watchAd(adId, duration, this);
+                });
+            });
+        }
+
+        function watchAd(adId, duration, button) {
+            if (adsWatchedToday >= 20) {
+                showToast('Daily ad limit reached!', 'error');
+                return;
+            }
+            
+            // Check if user has already watched this ad today
+            const today = new Date().toDateString();
+            db.collection('adViews')
+                .where('userId', '==', currentUser.uid)
+                .where('date', '==', today)
+                .where('adId', '==', adId)
+                .get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        showToast('You have already watched this ad today!', 'error');
+                        return;
+                    }
+                    
+                    // Start ad verification process
+                    startAdVerification(adId, duration, button);
+                })
+                .catch(error => {
+                    console.error('Error checking ad view:', error);
+                    showToast('Error starting ad. Please try again.', 'error');
+                });
+        }
+
+        function startAdVerification(adId, duration, button) {
+            currentAdId = adId;
+            
+            // Show verification overlay
+            verificationOverlay.style.display = 'flex';
+            verificationCountdown.textContent = duration;
+            verificationProgress.style.width = '0%';
+            
+            let timeLeft = duration;
+            let progress = 0;
+            
+            // Start countdown
+            adVerificationTimer = setInterval(() => {
+                timeLeft--;
+                progress = ((duration - timeLeft) / duration) * 100;
+                
+                verificationCountdown.textContent = timeLeft;
+                verificationProgress.style.width = progress + '%';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(adVerificationTimer);
+                    completeAdWatch(adId, button);
+                }
+            }, 1000);
+            
+            // Load actual ad from SDK
+            loadAdFromSDK(adId);
+        }
+
+        function loadAdFromSDK(adId) {
+            const adContainer = document.getElementById(`ad-container-${adId}`);
+            
+            // Clear previous content
+            adContainer.innerHTML = '';
+            
+            // Try to load ad from SDK
+            if (typeof show_9898916 !== 'undefined') {
+                try {
+                    // Use the ad SDK to display the ad
+                    show_9898916(adContainer);
+                    console.log('Ad loaded from SDK');
+                } catch (error) {
+                    console.error('Error loading ad from SDK:', error);
+                    // Fallback to placeholder ad
+                    showFallbackAd(adContainer);
+                }
+            } else {
+                // Fallback to placeholder ad
+                showFallbackAd(adContainer);
+            }
+        }
+
+        function showFallbackAd(container) {
+            // Create a simple fallback ad
+            const fallbackAd = document.createElement('div');
+            fallbackAd.style.width = '100%';
+            fallbackAd.style.height = '200px';
+            fallbackAd.style.background = '#334155';
+            fallbackAd.style.borderRadius = '8px';
+            fallbackAd.style.display = 'flex';
+            fallbackAd.style.justifyContent = 'center';
+            fallbackAd.style.alignItems = 'center';
+            fallbackAd.style.color = 'white';
+            fallbackAd.style.fontSize = '18px';
+            fallbackAd.style.fontWeight = 'bold';
+            fallbackAd.textContent = 'Sample Advertisement';
+            
+            container.appendChild(fallbackAd);
+        }
+
+        function completeAdWatch(adId, button) {
+            // Hide verification overlay
+            verificationOverlay.style.display = 'none';
+            
+            // Clear any active timer
+            if (adVerificationTimer) {
+                clearInterval(adVerificationTimer);
+                adVerificationTimer = null;
+            }
+            
+            // Record ad view in database
+            const today = new Date().toDateString();
+            db.collection('adViews').add({
+                userId: currentUser.uid,
+                adId: adId,
+                date: today,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                // Update user balance
+                return db.collection('users').doc(currentUser.uid).update({
+                    balance: firebase.firestore.FieldValue.increment(5)
+                });
+            })
+            .then(() => {
+                // Create transaction record
+                return db.collection('transactions').add({
+                    userId: currentUser.uid,
+                    type: 'ad_earnings',
+                    amount: 5,
+                    description: 'Earnings from watching ad',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .then(() => {
+                // Update local ad count
+                adsWatchedToday++;
+                
+                // Show success message
+                showToast('+5৳ earned from watching ad!', 'success');
+                
+                // Update UI
+                updateUI();
+                
+                // Reset button
+                button.disabled = false;
+                button.textContent = 'Watch Again Tomorrow';
+                button.disabled = true;
+            })
+            .catch(error => {
+                console.error('Error completing ad watch:', error);
+                showToast('Error completing ad. Please try again.', 'error');
+                
+                // Reset button
+                button.disabled = false;
+                button.textContent = 'Watch Ad';
+            });
+        }
+
+        // Packages Functions
+        function loadPackages() {
+            const packagesContainer = document.getElementById('packagesContainer');
+            packagesContainer.innerHTML = '';
+            
+            // Package data
+            const packages = [
+                { id: 1, price: 1000, daily: 50, days: 30, total: 1500 },
+                { id: 2, price: 2000, daily: 120, days: 30, total: 3600 },
+                { id: 3, price: 5000, daily: 350, days: 30, total: 10500 },
+                { id: 4, price: 10000, daily: 800, days: 30, total: 24000 },
+                { id: 5, price: 15000, daily: 1300, days: 30, total: 39000 },
+                { id: 6, price: 20000, daily: 1800, days: 30, total: 54000 },
+                { id: 7, price: 25000, daily: 2400, days: 30, total: 72000 },
+                { id: 8, price: 30000, daily: 3000, days: 30, total: 90000 },
+                { id: 9, price: 40000, daily: 3600, days: 30, total: 108000 },
+                { id: 10, price: 50000, daily: 4000, days: 30, total: 120000 }
+            ];
+            
+            packages.forEach(pkg => {
+                const packageCard = document.createElement('div');
+                packageCard.className = 'card package-card';
+                packageCard.innerHTML = `
+                    <div class="package-header">
+                        <h3>Package ${pkg.id}</h3>
+                        <div class="package-price">${pkg.price}৳</div>
+                    </div>
+                    <div class="package-details">
+                        <div class="package-detail">
+                            <span>Daily Income:</span>
+                            <span>${pkg.daily}৳</span>
+                        </div>
+                        <div class="package-detail">
+                            <span>Duration:</span>
+                            <span>${pkg.days} days</span>
+                        </div>
+                        <div class="package-detail">
+                            <span>Total Return:</span>
+                            <span>${pkg.total}৳</span>
+                        </div>
+                    </div>
+                    <button class="btn purchase-package-btn" data-id="${pkg.id}" data-price="${pkg.price}">Purchase</button>
+                `;
+                
+                packagesContainer.appendChild(packageCard);
+            });
+            
+            // Add event listeners to purchase buttons
+            document.querySelectorAll('.purchase-package-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const packageId = this.getAttribute('data-id');
+                    const price = parseInt(this.getAttribute('data-price'));
+                    purchasePackage(packageId, price, this);
+                });
+            });
+        }
+
+        function purchasePackage(packageId, price, button) {
+            if (!userData) return;
+            
+            if (userData.balance < price) {
+                showToast('Insufficient balance to purchase this package', 'error');
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Purchasing...';
+            
+            // Update user balance and add package
+            db.collection('users').doc(currentUser.uid).update({
+                balance: firebase.firestore.FieldValue.increment(-price),
+                activePackages: firebase.firestore.FieldValue.arrayUnion({
+                    id: packageId,
+                    price: price,
+                    purchaseDate: new Date(),
+                    status: 'active'
+                })
+            })
+            .then(() => {
+                // Create transaction record
+                return db.collection('transactions').add({
+                    userId: currentUser.uid,
+                    type: 'package_purchase',
+                    amount: -price,
+                    description: `Purchase of Package ${packageId}`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .then(() => {
+                showToast(`Package ${packageId} purchased successfully!`, 'success');
+                button.textContent = 'Purchased';
+            })
+            .catch(error => {
+                showToast('Failed to purchase package: ' + error.message, 'error');
+                button.disabled = false;
+                button.textContent = 'Purchase';
+            });
+        }
+
+        // Deposit Functions
+        function submitDeposit() {
+            const transactionId = document.getElementById('depositTransactionId').value;
+            const amount = parseInt(document.getElementById('depositAmount').value);
+            const method = document.getElementById('depositMethod').value;
+            
+            if (!transactionId || !amount) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (amount < 1) {
+                showToast('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            // Create deposit request
+            db.collection('deposits').add({
+                userId: currentUser.uid,
+                transactionId: transactionId,
+                amount: amount,
+                method: method,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                showToast('Deposit request submitted! Waiting for admin verification.', 'success');
+                document.getElementById('depositTransactionId').value = '';
+                document.getElementById('depositAmount').value = '';
+            })
+            .catch(error => {
+                showToast('Failed to submit deposit request: ' + error.message, 'error');
+            });
+        }
+
+        // Withdrawal Functions
+        function submitWithdrawal() {
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            const account = document.getElementById('withdrawAccount').value;
+            
+            if (!amount || !account) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (amount < 1000 || amount > 50000) {
+                showToast('Withdrawal amount must be between 1000৳ and 50000৳', 'error');
+                return;
+            }
+            
+            if (!userData || userData.balance < amount) {
+                showToast('Insufficient balance for withdrawal', 'error');
+                return;
+            }
+            
+            if (userData.referralCount < 10) {
+                showToast('You need at least 10 referrals to withdraw', 'error');
+                return;
+            }
+            
+            // Create withdrawal request
+            db.collection('withdrawals').add({
+                userId: currentUser.uid,
+                amount: amount,
+                method: method,
+                account: account,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                // Deduct amount from user balance immediately
+                return db.collection('users').doc(currentUser.uid).update({
+                    balance: firebase.firestore.FieldValue.increment(-amount)
+                });
+            })
+            .then(() => {
+                showToast('Withdrawal request submitted! Amount deducted from balance.', 'success');
+                document.getElementById('withdrawAmount').value = '';
+                document.getElementById('withdrawAccount').value = '';
+            })
+            .catch(error => {
+                showToast('Failed to submit withdrawal request: ' + error.message, 'error');
+            });
+        }
+
+        // Profile Functions
+        function updateProfile() {
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+            
+            if (!name || !phone) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            db.collection('users').doc(currentUser.uid).update({
+                name: name,
+                phone: phone
+            })
+            .then(() => {
+                showToast('Profile updated successfully!', 'success');
+            })
+            .catch(error => {
+                showToast('Failed to update profile: ' + error.message, 'error');
+            });
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showToast('New password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            // Reauthenticate user
+            const credential = firebase.auth.EmailAuthProvider.credential(
+                currentUser.email, 
+                currentPassword
+            );
+            
+            currentUser.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // Change password
+                    return currentUser.updatePassword(newPassword);
+                })
+                .then(() => {
+                    showToast('Password changed successfully!', 'success');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                })
+                .catch(error => {
+                    showToast('Failed to change password: ' + error.message, 'error');
+                });
+        }
+
+        // Notifications Functions
+        function loadNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            notificationsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No notifications</p>';
+            
+            // In a real app, you would fetch notifications from Firestore
+            // This is a placeholder implementation
+        }
+    </script>
+</body>
+</html>
